@@ -15,10 +15,19 @@ const wss = new WebSocket.Server({ server });
 
 // Middleware
 app.use(cors({
-  origin: ['http://localhost:3000', 'http://127.0.0.1:5500', 'file://', '*'],
-  credentials: true
+  origin: [
+    'https://syedazeem1102.github.io',
+    'https://nodejs-production-b2333.up.railway.app',
+    'http://localhost:3000',
+    'http://127.0.0.1:5500'
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Accept']
 }));
-app.use(express.json());
+
+// Add explicit OPTIONS handler
+app.options('*', cors());
 
 // Environment Configuration
 const config = {
