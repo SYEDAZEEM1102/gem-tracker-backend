@@ -45,12 +45,7 @@ const config = {
 };
 
 // Initialize clients
-const twitterClient = new TwitterApi({
-  appKey: config.twitter.appKey,
-  appSecret: config.twitter.appSecret,
-  accessToken: config.twitter.accessToken,
-  accessSecret: config.twitter.accessSecret,
-});
+const twitterClient = new TwitterApi(config.twitter.bearerToken);
 
 const supabase = createClient(config.supabase.url, config.supabase.anonKey);
 
