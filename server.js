@@ -362,12 +362,19 @@ class TwitterStreamManager {
         add: rules
       });
 
-      // Start stream
-      twitterStream = await twitterClient.v2.searchStream({
-        'tweet.fields': ['created_at', 'author_id', 'public_metrics'],
-        'user.fields': ['username', 'public_metrics'],
-        expansions: ['author_id']
-      });
+      // Start polling every 5 minutes (FREE API compatible)
+console.log('🔄 Starting polling mode - checking accounts every 5 minutes');
+
+// Initial check
+await checkAccountsForGemCalls();
+
+// Set up 5-minute polling
+pollingInterval = setInterval(async () => {
+  console.log('🔍 Polling accounts for new gem calls...');
+  await checkAccountsForGemCalls();
+}, 5 * 60 * 1000); // 5 minutes
+
+console.log('✅ Polling mode activated');
 
       twitterStream.on('data', async (tweet) => {
         try {
