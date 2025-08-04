@@ -8,6 +8,66 @@ const axios = require('axios');
 const WebSocket = require('ws');
 const http = require('http');
 
+// Function to check accounts for gem calls (polling mode)
+async function checkAccountsForGemCalls() {
+  try {
+    console.log('🔍 Checking accounts for gem calls...');
+    
+    // Get all accounts from database
+    const { data: accounts, error } = await supabase
+      .from('accounts')
+      .select('*')
+      .eq('active', true);
+      
+    if (error) {
+      console.error('❌ Error fetching accounts:', error);
+      return;
+    }
+    
+    if (!accounts || accounts.length === 0) {
+      console.log('📭 No accounts to monitor');
+      return;
+    }
+    
+    console.log(`📊 Checking ${accounts.length} accounts...`);
+    
+    // For each account, search their recent tweets
+    for (const account of accounts.slice(0, 5)) { // Limit to 5 accounts per check to avoid rate limits
+      try {
+        const username = account.handle.replace('@', '');
+        
+        // Search recent tweets from this user
+        const tweets = await twitterClient.v2.get('tweets/search/recent', {
+          query: `from:${username}`,
+          max_results: 10,
+          'tweet.fields': ['created_at', 'author_id', 'public_metrics'],
+        });
+        
+        if (tweets.data) {
+          console.log(`✅ Found ${tweets.data.length} recent tweets from ${account.handle}`);
+          
+          // Process tweets for gem calls (simplified for now)
+          for (const tweet of tweets.data) {
+            const tweetText = tweet.text.toLowerCase();
+            if (tweetText.includes('$') && (tweetText.includes('buy') || tweetText.includes('entry'))) {
+              console.log(`💎 Potential gem call from ${account.handle}: ${tweet.text.substring(0, 100)}...`);
+            }
+          }
+        }
+        
+        // Wait between requests to avoid rate limits
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        console.error(`❌ Error checking ${account.handle}:`, error.message);
+      }
+    }
+    
+  } catch (error) {
+    console.error('❌ checkAccountsForGemCalls error:', error);
+  }
+}
+
 // Initialize Express
 const app = express();
 const server = http.createServer(app);
