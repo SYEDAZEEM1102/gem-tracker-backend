@@ -406,9 +406,43 @@ class AccountScorer {
 class TwitterStreamManager {
   static async startMonitoring() {
     try {
-      if (twitterStream) {
-        await twitterStream.close();
+      console.log('🔄 Starting polling mode - checking accounts every 5 minutes');
+      
+      // Stop any existing polling
+      if (pollingInterval) {
+        clearInterval(pollingInterval);
       }
+      
+      // Set monitoring flag
+      isMonitoring = true;
+      
+      // Initial check
+      await checkAccountsForGemCalls();
+      
+      // Set up 5-minute polling  
+      pollingInterval = setInterval(async () => {
+        console.log('🔍 Polling accounts for new gem calls...');
+        await checkAccountsForGemCalls();
+      }, 5 * 60 * 1000);
+      
+      console.log('✅ Polling mode activated');
+      
+    } catch (error) {
+      console.error('Polling start error:', error);
+      isMonitoring = false;
+      throw error;
+    }
+  }
+
+  static async stopMonitoring() {
+    // Add stop method if missing
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+    }
+    isMonitoring = false;
+    console.log('⏹️ Polling stopped');
+  }
+}
 
       // Define stream rules
       const rules = [
